@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Pod 
 metadata:
   name: mypod
-  labels:   // are used to query pods in the cluster , these key and value pair is given by user
+  labels:   # are used to query pods in the cluster , these key and value pair is given by user
     app: webserver
     version: v1
     author: sonal 
