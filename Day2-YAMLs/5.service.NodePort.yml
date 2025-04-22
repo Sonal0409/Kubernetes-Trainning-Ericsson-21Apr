@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service 
+metadata:
+  name: mysvc2
+  labels:
+    author: sonal 
+    app: java
+spec:
+  type: NodePort
+  ports:
+   - targetPort: 80  # container port
+     port: 80    # service port
+     nodePort: 30009
+  selector:  # select the pods that has the label  as type=webserver 
+    type: webserver 
