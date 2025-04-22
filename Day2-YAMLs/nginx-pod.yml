@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Pod 
+metadata:
+  name: nginx-pod
+  labels:  
+    type: webserver
+    author: sonal 
+spec:
+  containers:
+    - name: c1
+      image: nginx 
