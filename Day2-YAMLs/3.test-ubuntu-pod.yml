@@ -3,7 +3,7 @@ kind: Pod
 metadata:
   name: test-pod
   labels:  
-    type: webserver
+    type: test
     author: sonal 
 spec:
   containers:
