@@ -8,8 +8,9 @@ metadata:
 spec:
   containers:
     - name: c1
-      image: ubuntu  
+      image: ubuntu 
+      command: ["bash", "-c", "sleep 6000"] 
     - name: c2
       image: httpd
     - name: c3
-      image: nginx 
+      image: tomcat 
