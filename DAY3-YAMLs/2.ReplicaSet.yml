@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: myrs
+  labels:
+    author: sonal
+spec:
+  replicas: 3
+  selector:
+   matchLabels:
+     app: webserver
+  template: 
+    metadata:
+      labels:
+        app: webserver
+        version: v1
+    spec:
+     containers:
+      - name: c1
+        image: nginx 
