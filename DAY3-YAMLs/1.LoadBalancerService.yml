@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service 
+metadata:
+  name: mysvc3
+  labels:
+    author: sonal 
+    app: java
+spec:
+  type: LoadBalancer
+  ports:
+   - targetPort: 80  # container port
+     port: 80    # service port
+  selector:  # select the pods that has the label  as type=webserver 
+    type: webserver 
