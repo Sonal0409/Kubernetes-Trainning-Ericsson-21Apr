@@ -80,6 +80,26 @@ kubectl patch deploy metrics-server -p "$(cat k8s-metrics-server.patch.yaml)" -n
 # kubectl get pods -n kube-system
 
 
+Deploy the pods and hpa
+
+# kubectl create -f https://raw.githubusercontent.com/Sonal0409/Kubernetes-Trainning-Ericsson-21Apr/refs/heads/main/Day4-YAMLs/HPA-Deployment.yml
+
+# kubectl delete all --all
+
+# kubectl create -f hpa.yml
+
+# kubectl get all
+
+# Now launch the load generator pod -> open master terminal again
+
+# kubectl run -i --tty load-generator --rm --image=busybox --restart=Never -- /bin/sh -c "while sleep 0.01; do wget -q -O- http://Service-Internal-IP:80; done"
+
+Check the pods:
+
+kubectl get pods
+kubectl top pods
+
+
 
 
 
