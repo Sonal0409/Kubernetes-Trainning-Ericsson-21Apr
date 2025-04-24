@@ -1,0 +1,109 @@
+
+# kubectl create -f https://raw.githubusercontent.com/Sonal0409/Kubernetes-Trainning-Ericsson-21Apr/refs/heads/main/Day4-YAMLs/Deployment.yml
+
+# kubectl get all
+
+# kubectl get deployment mydeploy -o wide
+
+# kubectl get rs -o wide
+
+Check the service from browser: --> open browser
+
+localhost:<nodePort>
+
+
+To run the loop --> open another terminal on your machine -> execute following command:
+
+while true;do curl http://localhost:<nodeport>;sleep 1; echo " ";done
+
+
+Set a new Image  - V2
+
+kubectl set image deployment mydeploy c1=leaddevops/kubeserve:v2
+
+# kubectl get all
+
+# kubectl get deployment mydeploy -o wide
+
+# kubectl get rs -o wide
+
+Check the service from browser: --> open browser
+
+localhost:<nodePort>
+
+
+  
+Set a new Image --> V3
+
+kubectl set image deployment mydeploy c1=leaddevops/kubeserve:v3
+
+# kubectl get all
+
+# kubectl get deployment mydeploy -o wide
+
+# kubectl get rs -o wide
+
+Check the service from browser: --> open browser
+
+localhost:<nodePort>
+
+
+This is faulty application-- we will rollback
+
+# kubectl rollout undo deployment mydeploy
+
+OR
+
+# kubectl set image deployment mydeploy c1=leaddevops/kubeserve:v2
+
+# kubectl get all
+
+# kubectl get deployment mydeploy -o wide
+
+# kubectl get rs -o wide
+
+Check the service from browser: --> open browser
+
+localhost:<nodePort>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
