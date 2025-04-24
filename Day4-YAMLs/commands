@@ -86,8 +86,6 @@ Deploy the pods and hpa
 
 # kubectl create -f https://raw.githubusercontent.com/Sonal0409/Kubernetes-Trainning-Ericsson-21Apr/refs/heads/main/Day4-YAMLs/HPA-Deployment.yml
 
-# kubectl create -f hpa.yml
-
 # kubectl get all
 
 # Now launch the load generator pod -> open master terminal again
