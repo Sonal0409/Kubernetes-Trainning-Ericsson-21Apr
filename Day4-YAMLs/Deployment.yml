@@ -25,7 +25,7 @@ spec:
 apiVersion: v1
 kind: Service 
 metadata:
-  name: mysvc 
+  name: mysvc1
 spec: 
  type: NodePort 
  ports:
