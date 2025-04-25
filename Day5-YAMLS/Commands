@@ -14,3 +14,58 @@
 # kubectl get jobs
 
 # kubectl get pods 
+
+
+=====================
+
+# kubectl create -f  https://raw.githubusercontent.com/Sonal0409/Kubernetes-Trainning-Ericsson-21Apr/refs/heads/main/Day5-YAMLS/Daemonset.yml
+
+you will 2 worker nodes - 2 pods
+
+# now run the command to delete a pod
+
+you will see its recreated 
+
+we will make worker 1 to  leave the cluster
+
+# kubectl drain kworker1
+
+# kubectl delete node kworker1
+
+# kubectl get nodes
+
+you will wait for some time and you will see the pod is deleted
+
+# kubectl get pods -o wide
+
+
+Run the folliwjng on MASTER  to geenrate a worker join token 
+
+# kubeadm token create --print-join-command
+
+Now go to worker 1 - terminal and run the token along with --ignore-preflight-errors=all
+
+<give your token> --ignore-preflight-errors=all
+
+Example
+kubeadm join 172.31.18.19:6443 --token frppx6.247bwrfds4cb01kg --discovery-token-ca-cert-hash sha256:fb3b1377803c28169fc02e21cf3b79576753ed097d0d31dbd9b63e5123dd92aa --ignore-preflight-errors=all
+
+Now check the node detils on master node
+
+# kubectl get nodes
+
+check pods
+
+# kubectl get pods
+
+
+
+
+
+
+
+
+
+
+
+
