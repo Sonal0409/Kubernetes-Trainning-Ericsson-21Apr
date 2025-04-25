@@ -5,6 +5,10 @@
 
 # kubectl get pods 
 
+# kubectl delete job --all
+
+# kubectl create -f https://raw.githubusercontent.com/Sonal0409/Kubernetes-Trainning-Ericsson-21Apr/refs/heads/main/Day5-YAMLS/Cronjob.yml
+
 # kubectl get cronjob -o wide
 
 # kubectl get jobs
