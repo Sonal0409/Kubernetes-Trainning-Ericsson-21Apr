@@ -1,0 +1,10 @@
+
+# kubectl get jobs
+
+# kubectl get pods 
+
+# kubectl get cronjob -o wide
+
+# kubectl get jobs
+
+# kubectl get pods 
