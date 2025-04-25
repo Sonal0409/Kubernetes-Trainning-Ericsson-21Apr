@@ -1,4 +1,6 @@
 
+# kubectl create -f https://raw.githubusercontent.com/Sonal0409/Kubernetes-Trainning-Ericsson-21Apr/refs/heads/main/Day5-YAMLS/jobs.yml
+
 # kubectl get jobs
 
 # kubectl get pods 
