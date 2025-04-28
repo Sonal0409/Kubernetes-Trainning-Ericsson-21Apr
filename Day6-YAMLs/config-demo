@@ -1,0 +1,127 @@
+# vim dev.properties
+
+app.env=dev
+app.mem=2048
+app.properties=dev.env.url
+app.user=sonal
+
+  Save the file
+
+# vim prod.properties
+
+app.env=prod
+app.mem=4089
+app.properties=prod.env.url
+app.CPU=2
+
+  Save the file
+
+Create config maps
+
+kubectl create configmap dev-config --from-file=dev.properties
+
+  kubectl create configmap prod-config --from-file=prd.properties
+
+
+# kubectl get configmap
+
+  Cretae pods to use configmaps
+
+
+# vim dev-pod-config.yml
+
+kind: Pod
+apiVersion: v1
+metadata:
+ name: devpodconfig1
+spec:
+ containers:
+  - image: nginx
+    name: dev
+    volumeMounts:
+     - name: config-volume
+       mountPath: /etc/config
+ volumes:
+  - name: config-volume
+    configMap:
+     name: dev-config
+
+
+       Save and create the pod
+
+
+# vim prod-pod-config.yml
+
+kind: Pod
+apiVersion: v1
+metadata:
+ name: prodpodconfig1
+spec:
+ containers:
+  - image: nginx
+    name: prod
+    volumeMounts:
+     - name: config-volume
+       mountPath: /etc/config
+ volumes:
+  - name: config-volume
+    configMap:
+     name: prod-config
+
+Save and create the pod
+
+
+You can exec into the pod and see the properties file at /etc/config
+
+
+  EDIT THE CONFIGMAP and see the changes on the container
+
+
+# kubectl edit configmap dev-config -o yaml
+
+
+edit the data section with new properties
+
+  save the file
+
+
+You can exec into the pod and see the properties file at /etc/config
+
+       
+
+
+
+       
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
