@@ -1,0 +1,12 @@
+# kubectl create -f pv.yml
+
+# kubectl get pv
+
+# kubectl create -f pvc.yml
+
+# kubectl get pvc
+
+# kubectl create -f pod-pvc.yml
+
+# kubectl get pods
+
