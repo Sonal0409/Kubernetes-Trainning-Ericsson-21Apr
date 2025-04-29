@@ -167,6 +167,117 @@ kubectl get pods
 Then, open the browser and put the below URL to access the WordPress application
 
 
+===================================================
+Scheduling techniques in Kubernetes:
+=================================================
+
+Label the nodes:
+
+# kubectl label node kworker1 disk=hdd
+# kubectl label node kworker2 disk=ssd
+
+
+# vim selector-1.yml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mydeploy
+spec:
+ replicas: 2
+ selector:
+  matchLabels:
+    app: webserver
+ template:
+   metadata:
+     labels:
+       app: webserver
+   spec:
+    nodeName: kworker1
+    containers:
+      - name: c1
+        image: nginx
+
+
+save the file
+
+# kubectl create -f selector-1.yml
+# kubectl get pods -o wide
+
+# vim selector-2.yml
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mydeploy
+spec:
+ replicas: 2
+ selector:
+  matchLabels:
+    app: webserver
+ template:
+   metadata:
+     labels:
+       app: webserver
+   spec:
+    nodeSelector:
+     disk: ssd
+    containers:
+      - name: c1
+        image: nginx
+
+
+save the file
+
+# kubectl delete deployment --all
+# kubectl create -f selector-2.yml
+
+# kubectl get pods -o wide
+
+
+# vim selector-3.yml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mydeploy
+spec:
+ replicas: 2
+ selector:
+  matchLabels:
+    app: webserver
+ template:
+   metadata:
+     labels:
+       app: webserver
+   spec:
+    affinity:
+      nodeAffinity:
+       requiredDuringSchedulingIgnoredDuringExecution:
+         nodeSelectorTerms:
+           - matchExpressions:
+               - key: disk
+                 operator: In
+                 values:
+                  - ssd
+    containers:
+      - name: c1
+        image: nginx
+
+save the file
+
+# kubectl delete deployment --all
+# kubectl create -f selector-3.yml
+
+# kubectl get pods -o wide
+
+Change the label on the worker 2.. you will the pods continue to run on same node
+
+kubectl label --overwrite node kworker2 disk=ssd123
+
+
+
 
 
 
