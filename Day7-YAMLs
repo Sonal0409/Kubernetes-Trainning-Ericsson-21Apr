@@ -1,0 +1,75 @@
+
+Secrets:
+========================
+
+# vim secrets.yml
+
+apiVersion: v1
+
+kind: Secret
+
+metadata:
+
+ name: mysql-pwd
+
+data:
+
+ password: "ZGJhQDEyMw=="
+
+
+save the file
+
+# kubectl create -f secrets.yml
+
+# kubectl get secrets
+
+
+Use secret in the deploymment
+
+# vim msql-deployment.yml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+spec:
+ replicas: 1
+ selector:
+  matchLabels:
+   app: mysql
+ template:
+   metadata:
+     labels:
+       app: mysql
+   spec:
+    containers:
+      - name: mysqlc1
+        image: mysql
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+           secretKeyRef:
+             name: mysql-pwd
+             key: password
+
+Save the file
+
+# kubectl create -f msql-deployment.yml
+
+# kubectl get all
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
