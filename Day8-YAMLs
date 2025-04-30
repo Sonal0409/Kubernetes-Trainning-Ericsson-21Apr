@@ -69,6 +69,8 @@ spec:
 
 # save and run the deployment
 
+# kubectl create -f deployment-taint.yml
+
 # kubectl get pods -o wide 
 
 Now taint the worker 2 with effects as NoExecute
@@ -138,6 +140,8 @@ spec:
 
 
 save the yaml and run it
+
+# kubectl create -f deployment-2.yml
 
 Pods will be scheduled on worker2 also.
 
