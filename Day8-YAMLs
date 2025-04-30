@@ -145,6 +145,107 @@ save the yaml and run it
 
 Pods will be scheduled on worker2 also.
 
+=======================================================================
+Namespaces, Kube configurations, contexts, roles and role binding
+======================================================================
+
+1. Create a namespace by using the following command:
+
+# kubectl create namespace dev
+
+2. Create a directory dev
+
+mkdir dev
+cd dev
+
+3. Generating an RSA private key and certificate requests for Dave
+
+First we need to generate a private rsa key and a CSR. The private key can easily be created with this command:
+
+# openssl genrsa -out dave.key 2048
+
+4. Use the following command to generate certificate requests:
+
+# openssl req -new -key dave.key -out dave.csr
+
+Organisation (O) field: this will be used to identify the group against the API Server ==> dev
+
+Common Name (CN) field: this will be used to identify him against the API Server ==> dave
+
+5. Once the .csr file is created, Dave needs to send it to us (admins) so we can sign it using the cluster Certificate Authority. 
+
+Run the following command to link an identity to a private key using a digital signature.
+
+# openssl x509 -req -in dave.csr -CA /etc/kubernetes/pki/ca.crt -CAkey /etc/kubernetes/pki/ca.key -CAcreateserial -out dave.crt -days 500
+
+
+Setting credentials to the user
+
+Set credentials to dave:
+
+# kubectl config set-credentials dave --client-certificate=/home/labuser/dev/dave.crt --client-key=/home/labuser/dev/dave.key
+
+
+Set context to dave:
+
+# kubectl config set-context dave-context --cluster=kubernetes --namespace=dev --user=dave
+
+
+Run the following command to display current contexts:
+
+# kubectl config get-contexts
+
+
+8. Creation of a Role
+Let’s first create a Role resource with the following specification:
+
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:       
+   namespace: dev
+   name: dave-role    
+rules:
+- apiGroups: ["", "extensions", "apps"]    
+  resources: ["deployments", "pods", "services"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+kubectl create -f role.yml
+
+kubectl get roles -n dev
+
+9. Creation of a RoleBinding
+The purpose of a RoleBinding is to link a Role (list of authorized actions) and a user or a group. 
+In order for Dave to have the rights specified in the above Role, we need to bind him to this Role. 
+We will use the following RoleBinding resource for this purpose:
+
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+ name: role-dave
+ namespace: dev
+subjects:
+- kind: User
+  name: dave
+  apiGroup: ""
+roleRef:
+  kind: Role
+  name: dave-role
+  apiGroup: ""
+
+kubectl create -f rolebinding.yml
+
+kubectl get rolebinding -n dev
+
+
+
+Run the following command to display current contexts:
+
+# kubectl config get-contexts
+
+Set the dave context  and test it
+
+kubectl config use-context dave-context
+
 
 
 
