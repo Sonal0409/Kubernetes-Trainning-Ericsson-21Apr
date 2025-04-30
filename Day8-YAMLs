@@ -36,3 +36,183 @@ spec:
 save the file and run
 
 # kubectl get pods -o wide
+
+TAINTS AND TOLERATIONS:
+===============================
+
+Step 1: Create a deployment with some replicas
+
+# kubectl delete deployment --all
+
+# vim deployment-taint.yml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy-1
+spec:
+ replicas: 6
+ selector:
+  matchLabels:
+   app: mysql-wordpress
+   product: mysql
+ template:
+   metadata:
+     labels:
+       app: mysql-wordpress
+       product: mysql
+   spec:
+    containers:
+      - name: mysqlc1
+        image: nginx
+
+
+# save and run the deployment
+
+# kubectl get pods -o wide 
+
+Now taint the worker 2 with effects as NoExecute
+
+# kubectl taint node kworker2 color=red:NoExecute 
+
+# kubectl get pods -o wide 
+
+Pods from worker 2 will be terminated and will be scheduled on worker 1
+
+Lets us remove the taint
+# kubectl taint node kworker2 color=red:NoExecute-
+
+We can scale down the deployment
+
+# kubectl scale deployment deploy-1 --replicas=0
+
+Scale up
+
+# kubectl scale deployment deploy-1 --replicas=3 
+
+Now taint the worker 2 with effects as NoSchedule
+
+# kubectl taint node kworker2 color=red:NoSchedule
+
+Pods continue to run on the worker2
+
+Scale up
+
+# kubectl scale deployment deploy-1 --replicas=5
+
+PODs are not scheduled on worker2
+
+=====================================
+Tolerations:
+=====================================
+
+We will do a new deployment - with toleration for worker node with colo=red:NoSchedule
+
+
+# vim dpeloyment-2.yml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy-2
+spec:
+ replicas: 6
+ selector:
+  matchLabels:
+   app: mysql-wordpress
+   product: mysql
+ template:
+   metadata:
+     labels:
+       app: mysql-wordpress
+       product: mysql
+   spec:
+    tolerations: # permissions to get created even on a tainted node
+      - key: color
+        operator: "Equal"
+        value: red
+        effect: NoSchedule
+    containers:
+      - name: mysqlc1
+        image: nginx
+
+
+save the yaml and run it
+
+Pods will be scheduled on worker2 also.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
