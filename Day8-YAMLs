@@ -1,0 +1,38 @@
+
+# kubectl label nodes kworker1 color=red
+
+# vim node-selecotr-2.yml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-selector 
+  labels:
+    app: webserver 
+spec:
+ containers:
+   - name: c1
+     image: nginx 
+ affinity:
+  nodeAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 1
+        preference:
+          matchExpressions:
+           - key: disk 
+             operator: In
+             values:
+               - hdd 
+               - ssd
+      - weight: 2
+        preference:
+           matchExpressions:
+            - key: color
+              operator: In
+              values:
+               - red
+
+
+save the file and run
+
+# kubectl get pods -o wide
