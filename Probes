@@ -1,0 +1,93 @@
+
+Restart policy supported by Kubernetes : Always, OnFailure, Never
+=================================
+
+
+StartUp Probe
+================
+Sometimes, you have to deal with legacy applications that might require an additional startup time on their first initialization. In such cases,the trick is to set up a startup probe where the application will be given some time to start the application and then the required command is checked. Once the startup probe has succeeded once,container continues to run.
+If the startup probe never succeeds, the container is killed after given period of time and subject to the pod's restartPolicy
+
+Startup probe runs only once in the begining.
+
+
+Readiness Probe
+==================
+
+Sometimes, applications are temporarily unable to serve traffic. For example, an application might need to load large data or configuration files during startup, or depend on external services after startup. In such cases, you don't want to kill the application, but you don't want to send it requests either. Kubernetes provides readiness probes to detect and mitigate these situations. A pod with containers reporting that they are not ready does not receive traffic through Kubernetes Services.
+
+The readiness probe will check a container for its service request serving capabilities. If a container fails the probe, then Kubernetes will remove the IP address of the related pod.
+
+Readiness probes runs on the container during its whole lifecycle.
+
+Kubernetes execute liveliness and readiness probes for the Pods to check if they function as per the desired state.
+
+*****************************
+
+The liveliness probe will check a container for its running status. 
+If a container fails the probe, Kubernetes will terminate it and create a new container in accordance with the restart policy.
+Liveness probes do not wait for readiness probes to succeed. If you want to wait before executing a liveness probe you should use initialDelaySeconds or a startupProbe.
+
+
+Also :
+
+The periodSeconds:  field specifies that the kubelet should perform a liveness probe every 10 seconds. 
+
+ The initialDelaySeconds:  field tells the kubelet that it should wait 5 seconds before performing the first probe.
+
+timeoutSeconds: Number of seconds after which the probe times out. Defaults to 1 second. Minimum value is 1
+
+successThreshold: Minimum consecutive successes for the probe to be considered successful after having failed. Defaults to 1. Must be 1 for liveness and startup Probes. Minimum value is 1.
+
+failureThreshold: After a probe fails failureThreshold times in a row, Kubernetes considers that the overall check has failed: the container is not ready/healthy/live. For the case of a startup or liveness probe, if at least failureThreshold probes have failed, Kubernetes treats the container as unhealthy and triggers a restart for that specific container.
+
+
+
+
+
+
+
+
+
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: my-app
+  template:
+    metadata:
+      labels:
+        app: my-app
+    spec:
+      containers:
+      - name: my-app-container
+        image: my-app-image:latest
+        ports:
+        - containerPort: 8080
+
+        startupProbe:
+          httpGet:
+            path: /healthz/startup
+            port: 8080
+          failureThreshold: 30
+          periodSeconds: 10
+
+        livenessProbe:
+          httpGet:
+            path: /healthz/liveness
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+
+        readinessProbe:
+          httpGet:
+            path: /healthz/readiness
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
