@@ -1,0 +1,93 @@
+
+Install HELM on the lab
+
+  Execute below commands:
+
+# curl https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get-helm-3 > get_helm.sh
+# chmod 700 get_helm.sh
+# ./get_helm.sh
+
+
+  create a new helm Chart
+
+# helm create webapp
+# ls -al webapp
+
+# cd webapp/
+# pwd
+
+  # vim values.yaml
+
+replicaCount: 3
+
+image:
+  repository: leaddevops/kubeserve
+  tag: "v2"
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 80
+
+    
+Save the file.
+
+    
+# cd templates/
+# ls -al
+# rm -rf *.yaml NOTES.txt tests 
+
+    # vim deployment.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mydeploy-helm
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: kubeserve
+  template: 
+    metadata:
+      labels:
+        app: kubeserve
+    spec:
+      containers:
+        - name: c1
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+
+
+
+Save the file
+
+  # service.yaml
+
+  
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysvc
+spec:
+ type: {{ .Values.service.type }}
+ ports:
+  - targetPort: {{ .Values.service.targetPort }}
+    port: {{ .Values.service.port }}
+ selector:
+  app: kubeserve
+
+
+    save the file
+
+
+    # cd
+
+    # helm install release-chart-1 webapp
+
+    # kubectl get all
+
+    # helm list
+
+    # helm uninstall release-chart-1 
+
+  
