@@ -1,0 +1,232 @@
+Network policy:
+**********************
+
+Network policy is like a role or specification you can call it.
+
+Network policy is a specification of how group of pods are allowed to communicate with each other 
+and other network endpoints
+
+network policy allows you to specify which pods can talk to which other pods.
+This helps when securing communication between pods, allowing you to identify ingress and egress rules
+
+Here :
+ingress means: traffic incoming to a pod by a user request
+egress means: request outgoing from one pod to other DB pod(for eg)
+ALso note this request incoming to DB pod will be ingress for it and egress for app pod(because it is sending it to DB-outgoing).
+
+We can apply network policy to a pod by using pod selector or namepsace selector.
+
+We can also choose a CIDR block range to apply the network ploicy.
+
+Before we implement Network policy, we have to know the pre-requiste:
+
+Network policies are implemented by the network plugin, so we must be using a networking solution which supports NetworkPolicy. 
+Ex: calico, canal provides these features ( in cka exam you may see canal already setup )
+
+Ex: fenel network does not support network policy, so if network plugin doesnot support network ploicy, you cannot create it.
+
+simply creating the network policy resource without a network plugin controller to implement it, 
+the network ploicy will have no effect
+
+By Default , all pods in the cluster can communicate with any other pod and reach out to any available IP.
+
+Network Policies allow you to limit what network traffic is allowed to and from pods in your cluster.
+
+***************
+
+
+Demo:
+
+Deploy the Springboot application:
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: mongodb
+  name: mongodb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongodb
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: mongodb
+    spec:
+      containers:
+       - image: lerndevops/samples:mongodb
+         name: mongo
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+   name: mongo
+spec:
+   type: ClusterIP
+   ports:
+    - port: 27017
+      targetPort: 27017
+   selector:
+     app: mongodb
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: springboot-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: myapp
+  template:
+    metadata:
+      labels:
+        app: myapp
+    spec:
+      containers:
+      - image: lerndevops/samples:springboot-app
+        name: springboot-app
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: springboot-app-svc
+spec:
+  type: NodePort
+  ports:
+   - port: 80
+     targetPort: 8080
+  selector:
+    app: myapp
+
+
+# kubectl create -f springboot.yml
+
+# kubectl get pods 
+
+Access the application using nodeport from browser
+
+share with all
+
+Now you will see everyone can access the springboot app
+
+and in cluster Db pod can be accessed by all
+
+app is able to communicate to mongodb pods & write the data to it
+
+
+Now lets block the request / traffic to springa app & mongo db using Network Policies
+
+vim deny-ingress-to-mongodb-and-springapp.yaml
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-mongodb-ingress-from-all
+  namespace: default
+spec:
+  podSelector:
+    matchLabels:
+      app: mongodb
+  policyTypes:
+  - Ingress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-springapp-ingress-from-all
+  namespace: default
+spec:
+  podSelector:
+    matchLabels:
+      app: myapp
+  policyTypes:
+  - Ingress
+
+
+kubectl create -f deny-ingress-to-mongodb-and-springapp.yaml
+
+kubectl get netpol
+
+netpol = network policy
+
+2 network policy is now created with effect as ingress.
+technically due to the network policy ingress, all requests to spring boot pod and mongodb pod are blocked completely.
+
+Now try to access application from browser it shoudn't respond
+
+kubectl get services springboot-app-svc
+
+use the NodPort to access the springboot java in the browser 
+
+This proves we successfully block all ingress (incoming) traffic to spring app
+
+
+Now lets allows ingress(incoming) traffic to spring java app fromm all using Network Policies:
+
+vim allow-ingress-to-springapp-from-all.yaml
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-springapp-ingress-from-all
+  namespace: default
+spec:
+  podSelector:
+    matchLabels:
+      app: myapp
+  policyTypes:
+   - Ingress
+  ingress:
+   - from:
+      - ipBlock:
+          cidr: 0.0.0.0/0
+      #- namespaceSelecotr:
+      #- podSelecotr:
+
+kubectl create -f allow-ingress-to-springapp-from-all.yaml
+
+kubectl get services springboot-app-svc
+
+use the NodPort to access the springboot java in the browser
+This should allow the traffic to Spring java App & you should see the app in browser
+
+But if you try to submit the data to DB it will not respond, we still need to allow traffic to mongodb.
+
+
+Now lets allow ingress(incoming) traffic to mongodb only from spring app pods using Network Policies
+
+vim allow-ingress-to-mongodb-from-springapp.yaml
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-mongodb-ingress-from-springapp
+  namespace: default
+spec:
+  podSelector:
+    matchLabels:
+      app: mongodb
+  policyTypes:
+   - Ingress
+  ingress:
+   - from:
+      #- ipBlock:
+      #    cidr: 0.0.0.0/0
+      #- namespaceSelector:
+      - podSelector:
+          matchLabels:
+            app: myapp
+
+kubectl create -f allow-ingress-to-mongodb-from-springapp.yaml
+
+kubectl get netpol
+
+Now we should be able to write the data to mongodb from spring java app

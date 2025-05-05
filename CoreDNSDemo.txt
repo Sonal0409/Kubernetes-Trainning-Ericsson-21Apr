@@ -1,0 +1,312 @@
+
+Networking in Kubernetes:
+
+Lets deploy a springboot application and mongo DB 
+
+Lets see how my application can communicate with DB internally
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: mongodb
+  name: mongodb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongodb
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: mongodb
+    spec:
+      containers:
+       - image: lerndevops/samples:mongodb
+         name: mongo
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+   name: mongo
+spec:
+   type: ClusterIP
+   ports:
+    - port: 27017
+      targetPort: 27017
+   selector:
+     app: mongodb
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: springboot-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: myapp
+  template:
+    metadata:
+      labels:
+        app: myapp
+    spec:
+      containers:
+      - image: lerndevops/samples:springboot-app
+        name: springboot-app
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: springboot-app-svc
+spec:
+  type: NodePort
+  ports:
+   - port: 80
+     targetPort: 8080
+  selector:
+    app: myapp
+
+
+# kubectl create -f springboot.yml
+
+# kubectl get pods 
+
+we will have 2 replicas of sprintboot and 1 replica of DB
+
+DB pod will take sometime to start
+
+# kubectl get service
+
+Let's access the application from browser now using nodeport of springboot app
+
+Add some values and submit--> data will be added on the frontend
+
+We can see data is getting submitted to the DB now.
+******************
+To prove that the data is actually written in db ,
+Now Let's bring the DB pod down by changing replica count to 0 for mongo deployment
+
+# kubectl scale deployment mongodb --replicas 0
+
+# kubectl get pods
+
+you will not see the DB pod is now actaully down/not available
+
+go to browser and enter data..you will see error
+
+The error shows that it is unable to connect to mongo:27017
+
+Note that: the front application is working very well
+
+application is not showing any data also, as it is not able to read any data form DB
+
+
+*******************
+
+Lets bring up the pod again, the frontend app will display the data
+
+kubectl scale deployment mongodb --replicas 1
+
+You will see that application is able to communicate with DB pod and display the data.
+
+
+Lets go inside the springboot pod to check how it is sending data to mongo DB
+
+# kubectl exec -it springboot-app-5699498d67-k79zp -- /bin/sh
+
+
+# ps -ef|grep java
+
+1 root      0:27 java -Dspring.data.mongodb.uri=mongodb://mongo:27017/spring-mongo -Djava.security.egd=file:/dev/./urandom -jar ./spring-boot-mongo.jar
+
+Now try to send request to DB pod using its ipaddress and port number
+
+curl 10.4.0.57:27017
+
+==> there will be a response, but this ip is dynamic.it will be available only when db pod is available
+
+curl <mongoClusterIP>:27017
+==> there will be a response, but this ip is dynamic
+
+But then how my springboot application was able to communicate with the DB application without knowing the pod ip or service ip
+
+In the pod, if you will check the java process:
+
+/opt/app # ps -ef|grep java
+    1 root      0:26 java -Dspring.data.mongodb.uri=mongodb://mongo:27017/spring-mongo -Djava.security.egd=file:/dev/./urandom -jar ./spring-boot-mongo.jar
+
+In the above java process you will observe we are communicating with the DB using the name mongo ==>mongo:27017 instead of any ipaddress
+
+But how this mongo is coming from?
+
+Here if you will observe the name of the service we have created ==> its mongo also
+
+here we are using the concept of name resolution instead of ip address to connect to the target
+
+so if we use name of service mongo and port we will get the sme response
+
+curl mongo:27017
+
+
+So the question is how does the name resolution works?
+
+How does the name resolution works in real time?
+
+So consider i have 2 VMs which are part of the same network
+
+Rember that every VM will get an Ip address each time it is come up. When 1 server wants to connect to other we make use of the ipaddres
+
+that is our default understanding.
+
+But if my server1 wants to reach another server2 using a name, can we do that? Yes we can by maing some configuration changes in the host file
+
+Go to vim /etc/hosts
+
+inside this add the target server ip address and add a name
+
+35.239.116.217 www.example.com 
+
+save the file
+
+so when we give 
+
+ping www.example.com
+
+so here it goes to hosts file and check the ipaddress associated to the name and connects to it
+
+**********
+
+Now chnage the hostname of server2
+
+# hostname Server2
+# sudo su -
+
+Go to server 1
+
+# ping server2
+
+It is successfull
+In this case, the server 1 hostfile didnot have the name server2, how can it still reach the server?
+
+The reason is because of the DNS configuration, what is dns configuration?
+
+Consider this paint image: 
+
+Now lets go back to our example in kubernetes
+
+Execute the command to gointo sprintboot pod
+
+kubectl exec -it springboot-app-5699498d67-k79zp -- /bin/sh 
+
+
+Here if we give
+
+ping mongo:27017
+
+we are able to connect to DB
+
+Lets check the /etc/hosts file in the container
+
+cd /etc/hosts ==> there is no name as mongo configured in this file
+
+Now lets check /etc/resolve.conf for the domain nameserver details
+
+cat /etc/resolv.conf
+
+with in this file ther eis a nameserver entery which is looking for an ip addres
+
+Now where is the DNS server==> note that there is a dns server already available in your cluster
+
+# kubectl get pods -n kube-system
+
+you will see the coredns pods , these are technically are a flexible, extensible DNS server that can serve as the Kubernetes cluster DNS.
+
+with is the kube-system namespace, you will also a kube-dns service
+
+# kubectl get svc -n kube-system
+
+the ip addres sof this server is same as in the resolv.conf file of sprintboot application
+
+So this service is actually sending request from sprinboot pod to the coredns pods 
+
+# kubectl get pods -o wide -n kube-system | grep coredns
+
+note the ipaddress and now describe the service 
+
+# kubectl describe service kube-dns -n kube-system
+
+
+Within kubernetes cluster we have 2 pods acting as DNS servers to reach to them we have kube-dns service
+
+within the coredns, kubernetes automatically create these domains
+> there is a defualt domain called as cluster.local
+> and inside this there are domains like svc and pod domain
+> inside each domain we have a namespace created that we have in cluster
+> when you create a service in cluster it get updated in the svc domain /namespace/ serviceipaddress servicename
+
+coredn/kube-dns (kube-dns ipaddress)
+ cluster.local
+  svc
+   default
+    12.34.56.6 mongo
+   namespace1
+    23.45.6.7 service1
+  pod
+   default
+   namespace1
+
+To check the domain details for mongo, lets execute this:
+
+kubectl exec -it springboot-app-5699498d67-k79zp -- /bin/sh
+
+nslookup mongo
+
+output will be:
+
+nslookup: can't resolve '(null)': Name does not resolve
+
+Name:      mongo
+Address 1: 10.8.2.248 mongo.default.svc.cluster.local
+
+its ipaddress of the service ip of mondo db 
+
+it is showing the details of service domain in the coredns server.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+==> there will be a response
+
+
+
+
+
+
+
