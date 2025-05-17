@@ -1,0 +1,45 @@
+Step 1: Turn off swap immediately
+bash
+Copy
+Edit
+sudo swapoff -a
+Step 2: Permanently disable swap by editing /etc/fstab
+Open the file:
+
+bash
+Copy
+Edit
+sudo nano /etc/fstab
+Find the line that contains swap and comment it out by adding a # at the beginning. It will look something like:
+
+bash
+Copy
+Edit
+# /swap.img none swap sw 0 0
+Save and exit (Ctrl+O, Enter, Ctrl+X in nano).
+
+Step 3: Restart Kubelet
+bash
+Copy
+Edit
+sudo systemctl daemon-reexec
+sudo systemctl restart kubelet
+Then check its status:
+
+bash
+Copy
+Edit
+sudo systemctl status kubelet
+Step 4: Test Health Endpoint Again
+Now this should work:
+
+bash
+Copy
+Edit
+curl -sSL http://localhost:10248/healthz
+It should return:
+
+text
+Copy
+Edit
+ok
